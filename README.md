@@ -5,7 +5,7 @@ A novel procedure is presented for the objective comparison and evaluation of a 
 This R-codebase can be run sequentially using the file numbering itself as a structure. Delinquency measures are algorithmically defined in **DelinqM.R** as data-driven functions, which may be valuable to the practitioner outside of the study's current scope. Note that scripts 3.2 and 3.3 are interactive scripts wherein the loss optimisation procedure is repeatedly run by rerunning the script with different settings, as set out in the comments. Each independent run produces results that are saved for graphing later on.
 
 ## Data
-This R-codebase creates designed portfolios as constrained by the framework described in the main text, with adequate commentary within the scripts.
+This R-codebase creates designed portfolios as constrained by the framework described in the main text, with adequate commentary within the scripts. Designed data are included as .RData files to ease replication, though it can be generated from scratch using the numbered scripts.
 
 
 ## Copyright
