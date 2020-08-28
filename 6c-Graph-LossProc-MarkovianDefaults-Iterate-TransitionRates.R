@@ -19,11 +19,17 @@ require(plot3Drgl)
 require(plotly)
 
 # ---- Plotting data loading & Preparation
-outer.iter.max <- 256
-it.name <- "v1_1d(i)"
+chosen.m <- "CD"; chosen.m.ind <- 1# main choice for text
+#chosen.m <- "DoD"; chosen.m.ind <- 3
+outer.iter.max <- 256 # main dataset for text
+it.name <- "v1_1d(iv)" # main dataset for text
+#outer.iter.max <- 16
+#it.name <- "v1_1a(iv)" 
+
+# - load data given parameters
 unpack.ffdf(paste0("LossProc",outer.iter.max, "-", it.name))
 
-plot.data <- copy(dat.EL) #subset(dat.EL, Iteration %in% c(seq(from=1, by=7, length.out=7), seq(from=2, by=7, length.out=7)))
+plot.data <- subset(dat.EL, Measure == chosen.m) #subset(dat.EL, Iteration %in% c(seq(from=1, by=7, length.out=7), seq(from=2, by=7, length.out=7)))
 
 # - dependent on simulation parameters
 port.sum <- sum(vec.Principal, na.rm=T)
@@ -43,7 +49,7 @@ plot.data[, P_PP_T2 := paste0(letters[P_PP_Ind],". ", P_PP_T, "%")] # for cyclin
 plot.data[, P_DD_Annotate := paste0(letters[P_DD_Ind],'.~italic(P)[DD]  ==  ', P_DD_T, '*"%"')]
 # create annotated variables for plotting purposes
 plot.data[, Min_Loss := min(Loss_Rate, na.rm=T), by=list(Iteration)]
-plot.data[, Min_Threshold := .SD[Loss_Rate == Min_Loss, Threshold], by=list(Iteration)]
+plot.data[, Min_Threshold := .SD[Loss_Rate == Min_Loss, Threshold][1], by=list(Iteration)]
 plot.data[, Annotate_text := .SD[, ifelse(Loss_Rate == Min_Loss, 
                                           paste0("italic(P)[PP] == ", P_PP_T[1],"*'%,'~~minimum~loss~at~italic(d) == ", Min_Threshold),
                                           NA)], by=list(Iteration)]
@@ -80,7 +86,7 @@ plot.full <- ggplot(plot.data, aes(x=Threshold, y=Loss_Rate)) + theme_minimal() 
   geom_segment(aes(x=0, xend=Min_Threshold, y=Min_Loss, yend=Min_Loss), linetype="dashed") + 
   geom_segment(aes(x=Min_Threshold,xend=Min_Threshold, y=0, yend=Min_Loss), linetype="dashed") + 
   facet_wrap(~P_DD_Annotate, labeller = label_parsed) +
-  labs(y="Loss (%)", x = expression(paste("Thresholds", {~italic(d)}, " for ", {italic(g)[1]})),#bquote({Default~thresholds~italic(d)~on~italic(g)[1]}),
+  labs(y="Loss (%)", x = parse(text=paste('Thresholds~italic(d)*" for "*italic(g)[', chosen.m.ind ,']')),#bquote({Default~thresholds~italic(d)~on~italic(g)[1]}),
        title="Loss curves (Markovian technique)", subtitle=paste0("Probability of staying in performing state: {closest_state}%") ) + 
   theme(text=element_text(family=chosenFont, size=13),
         legend.position="bottom", strip.text.x = element_text(colour="gray30", face="italic", size=14), 
@@ -98,7 +104,7 @@ plot.full <- ggplot(plot.data, aes(x=Threshold, y=Loss_Rate)) + theme_minimal() 
 animate(plot.full, nframes=2*outer.iter.max-1, fps=20, width=1200, height=1150)
 
 # - save animated plot as gif
-anim_save(filename=paste0("LossProc-", outer.iter.max,"-", it.name, ".gif"))
+anim_save(filename=paste0("LossProc-", chosen.m, "-", outer.iter.max,"-", it.name, ".gif"))
 
 
 
@@ -108,8 +114,10 @@ anim_save(filename=paste0("LossProc-", outer.iter.max,"-", it.name, ".gif"))
 
 # ---- Plotting data preparation
 # - select a few series
-(selected.PP <- c(1,5,9,11,12,13,14,15,16))
-(selected.DD <- c(1,2,3,4,6,8,10,12,16) )
+(selected.PP <- c(1,5,9,11,12,13,14,15,16)) # main choice for paper
+(selected.DD <- c(1,2,3,4,6,8,10,12,16) ) # main choice for paper
+#selected.PP <- unique(plot.data$P_PP_Ind)
+#selected.DD <- unique(plot.data$P_DD_Ind)
 plot.data2 <- subset(plot.data, P_PP_Ind %in% selected.PP & P_DD_Ind %in% selected.DD)
 # - recreate group indices
 pp.states2 <- sort(unique(plot.data2$P_PP_T))
@@ -117,14 +125,17 @@ dd.states2<- sort(unique(plot.data2$P_DD_T))
 plot.data2[, P_PP_Ind2 := which(P_PP_T==pp.states2), by=list(P_PP_T)]
 plot.data2[, P_DD_Ind2 := which(P_DD_T==dd.states2), by=list(P_DD_T)]
 # - create explicitly numbered and annotated states for plotting purposes
-plot.data2[, P_PP_T3 := paste0(letters[P_PP_Ind2],". ", P_PP_T, "%")] # for cycling correctly
-plot.data2[, P_DD_Annotate2 := paste0(letters[P_DD_Ind2],'.~italic(P)[DD]  ==  ', P_DD_T, '*"%"')]
+plot.data2[, P_PP_T3 := paste0('"("*',letters[P_PP_Ind2],'*") ', P_PP_T, '%"')] # for cycling correctly
+plot.data2[, P_DD_Annotate2 := paste0('"("*',toupper(letters[P_DD_Ind2]),'*")"~italic(P)[DD]  ==  ', P_DD_T, '*"%"')]
 # - create another subselection for points only (otherwise overplotting occurs)
 plot.data3 <- subset(plot.data2, Threshold %in% seq(from=0,to=max(plot.data$Threshold), by=2) | Threshold==Min_Threshold)
 
 # - ancillary plotting vectors
 shape.v <- c(15,16,17,0,1,2, 4,7,13) # shape vector
 col.v <- (brewer.pal(n=length(shape.v), name="Paired")) # colour vector
+# legend entries named list to be parsed (plotmath)
+label.v <- as.list(sort(unique(plot.data2$P_PP_T3)))
+label.v <- lapply(label.v, FUN = function(x) parse(text=x)[[1]])
 
 # -- full plot
 (plot.full2 <- ggplot(plot.data2, aes(x=Threshold, y=Loss_Rate)) + theme_minimal() + 
@@ -133,13 +144,13 @@ col.v <- (brewer.pal(n=length(shape.v), name="Paired")) # colour vector
   # minimum point
   geom_point(aes(x=Min_Threshold,y=Min_Loss), size=4, colour="gray15", shape=1) + 
   facet_wrap(~P_DD_Annotate2, labeller = label_parsed, scales="free") +
-  labs(y="Loss (%)", x = expression(paste("Thresholds", {~italic(d)}, " for ", {italic(g)[1]})) ) + 
+  labs(y="Loss (%)", x = parse(text=paste('Thresholds~italic(d)*" for "*italic(g)[', chosen.m.ind ,']')) ) + 
   theme(text=element_text(family=chosenFont, size=13),
         legend.position="bottom", strip.text.x = element_text(colour="gray30", face="italic", size=10), 
         strip.background = element_rect(fill="gray90", colour=NA)) + 
   scale_y_continuous(breaks=pretty_breaks(), labels=percent) +
-  scale_shape_manual(name=bquote(italic(P)[PP]), values=shape.v) + 
-  scale_colour_manual(name=bquote(italic(P)[PP]), values=col.v)
+  scale_shape_manual(name=bquote(italic(P)[PP]), values=shape.v, labels=label.v) + 
+  scale_colour_manual(name=bquote(italic(P)[PP]), values=col.v, labels=label.v)
 )
 
 # - save plot
@@ -243,7 +254,7 @@ ggsave(plot.full4, file=paste0("DefaultRate-Ppp_d_CD_Markovian_", outer.iter.max
 
 
 # =========== Plotting code: Static graph - Default rate vs mean duration per episode, colour by optimal threshold
-# Note: the graph produced here is used in the main text
+# Note: the graph produced here used to be in the main text, but was removed after careful consideration
 
 # - aggregate to minimum loss-level
 plot.data2 <- subset(plot.data, Threshold==Min_Threshold)
@@ -326,7 +337,7 @@ if (use.d3 == T) {
 
 
 # =========== Plotting code: 3D graph
-# Note: the graph produced here is used in the main text
+# Note: the graph produced here used to be in the main text, but was removed after careful consideration
 
 # - aggregate to minimum loss-level
 plot.data2 <- subset(plot.data, Threshold==Min_Threshold)

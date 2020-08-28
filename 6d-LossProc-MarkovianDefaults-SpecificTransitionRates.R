@@ -1,4 +1,4 @@
-# ======== Script 2: Loss Optimisation Procedure across Transition Rates (P_PP)
+# ======== Script 2: Loss Optimisation Procedure for specific Transition Rates (P_PP)
 # This script implements the loss optimisation procedure presented in the accompanying academic article.
 # It does so in two steps: 
 #   1) generate a simple portfolio of amortising loans; 
@@ -7,9 +7,7 @@
 # --- The following information is ancillary to this particular script
 # a) Portfolio simulated using: MARKOVIAN DEFAULTS
 # b) (k,g)-truncation is implemented, but not used
-# c) Quantity over which this script iteratively applies the loss optimisation procedure (incl. portfolio generation):
-#   - Payment Transition Rates (P_PP)
-# d) This script is used to produce various results
+# c) This script is used to produce various results
 
 
 
@@ -78,7 +76,7 @@ vec.k.CD <- seq(0, (num.thresholds-1))  # Select thresholds for g1-measure
 # include: transition rates [p.trans] and state spaces [states].
 # The rest of the input arguments are simply copies of those objects within the outer data scope passed to within
 simJob_MarkovDefaults_p <- function(seed.value, p.trans, states, n, vec.Term, 
-                                         vec.Instal, period, sc.Thres, createOwnPar=F, cpu.threads=6) {
+                                    vec.Instal, period, sc.Thres, createOwnPar=F, cpu.threads=6) {
   
   # seed.value <- 1234
   #ptm <- proc.time() #IGNORE: for computation time calculation
@@ -497,29 +495,29 @@ coreJob_CD <- function(mat.Receipt.Use, vec.Instal, vec.IntRates, sc.Thres, peri
                                   Episode_Length_Median_AccountMedian = median(def.epi.median, na.rm=T),
                                   Episode_Length_Var_Grand = var(def.epis, na.rm=T),
                                   Episode_Length_Var_AccountMeanVar = mean(def.epi.var, na.rm=T)
-                                  ),
-                       data.table(Iteration=it, Measure="MD", MeasureName ="g2: MD", Threshold=d.MD,
-                                  Vol_Perf=length(perf.MD),Vol_Def=length(def.MD),
-                                  Bal_Perf = sum(vec.bal.MD[perf.MD], na.rm = T), Bal_Def = sum(vec.bal.MD[def.MD], na.rm = T),
-                                  Vol_Def_d3 = NA, Bal_Def_d3 = NA, 
-                                  Loss=sum(vec.Losses.MD, na.rm = T),
-                                  Episode_Number_Sum = NA, Episode_Number_Mean = NA, Episode_Number_Mean_d3 = NA, 
-                                  Episode_Length_Mean_Grand = NA, Episode_Length_Median_Grand = NA, 
-                                  Episode_Length_Mean_AccountMean = NA, Episode_Length_Mean_AccountMean_d3 = NA, 
-                                  Episode_Length_Median_AccountMedian = NA, Episode_Length_Var_Grand = NA,
-                                  Episode_Length_Var_AccountMeanVar = NA
-                       ),
-                       data.table(Iteration=it, Measure="DoD", MeasureName ="g3: DoD", Threshold=d.DoD,
-                                  Vol_Perf=length(perf.DoD),Vol_Def=length(def.DoD),
-                                  Bal_Perf = sum(vec.bal.DoD[perf.DoD], na.rm = T), Bal_Def = sum(vec.bal.DoD[def.DoD], na.rm = T),
-                                  Vol_Def_d3 = NA, Bal_Def_d3 = NA, 
-                                  Loss=sum(vec.Losses.DoD, na.rm = T),
-                                  Episode_Number_Sum = NA, Episode_Number_Mean = NA, Episode_Number_Mean_d3 = NA, 
-                                  Episode_Length_Mean_Grand = NA, Episode_Length_Median_Grand = NA, 
-                                  Episode_Length_Mean_AccountMean = NA, Episode_Length_Mean_AccountMean_d3 = NA, 
-                                  Episode_Length_Median_AccountMedian = NA, Episode_Length_Var_Grand = NA,
-                                  Episode_Length_Var_AccountMeanVar = NA
-                       )                       
+  ),
+  data.table(Iteration=it, Measure="MD", MeasureName ="g2: MD", Threshold=d.MD,
+             Vol_Perf=length(perf.MD),Vol_Def=length(def.MD),
+             Bal_Perf = sum(vec.bal.MD[perf.MD], na.rm = T), Bal_Def = sum(vec.bal.MD[def.MD], na.rm = T),
+             Vol_Def_d3 = NA, Bal_Def_d3 = NA, 
+             Loss=sum(vec.Losses.MD, na.rm = T),
+             Episode_Number_Sum = NA, Episode_Number_Mean = NA, Episode_Number_Mean_d3 = NA, 
+             Episode_Length_Mean_Grand = NA, Episode_Length_Median_Grand = NA, 
+             Episode_Length_Mean_AccountMean = NA, Episode_Length_Mean_AccountMean_d3 = NA, 
+             Episode_Length_Median_AccountMedian = NA, Episode_Length_Var_Grand = NA,
+             Episode_Length_Var_AccountMeanVar = NA
+  ),
+  data.table(Iteration=it, Measure="DoD", MeasureName ="g3: DoD", Threshold=d.DoD,
+             Vol_Perf=length(perf.DoD),Vol_Def=length(def.DoD),
+             Bal_Perf = sum(vec.bal.DoD[perf.DoD], na.rm = T), Bal_Def = sum(vec.bal.DoD[def.DoD], na.rm = T),
+             Vol_Def_d3 = NA, Bal_Def_d3 = NA, 
+             Loss=sum(vec.Losses.DoD, na.rm = T),
+             Episode_Number_Sum = NA, Episode_Number_Mean = NA, Episode_Number_Mean_d3 = NA, 
+             Episode_Length_Mean_Grand = NA, Episode_Length_Median_Grand = NA, 
+             Episode_Length_Mean_AccountMean = NA, Episode_Length_Mean_AccountMean_d3 = NA, 
+             Episode_Length_Median_AccountMedian = NA, Episode_Length_Var_Grand = NA,
+             Episode_Length_Var_AccountMeanVar = NA
+  )                       
   )
   
   cat(paste0("\n2) Threshold [",it," of ",num.thresholds,"]: (", Sys.time(),") Loss assessed! "),
@@ -530,7 +528,7 @@ coreJob_CD <- function(mat.Receipt.Use, vec.Instal, vec.IntRates, sc.Thres, peri
 
 
 # - function to truncating a receipt matrix, given starting times and term
-truncationJob <- function(mat.Receipt.Use, vec.truncstart.CD, vec.Term, createOwnPar=F, cpu.threads=6) {
+truncationJob <- function(mat.Receipt.Use, vec.truncstart, vec.Term, createOwnPar=F, cpu.threads=6) {
   
   innerJob2 <- function(i, t, t.max, Receipt.v) {
     if (t <0) {
@@ -552,7 +550,7 @@ truncationJob <- function(mat.Receipt.Use, vec.truncstart.CD, vec.Term, createOw
   mat.Receipt.output <- foreach(it=1:n, .combine='cbind', .verbose=F, .inorder=T, .packages=c('dplyr','data.table')) %dopar%
     {
       #it <- 1
-      receipt.temp <- innerJob2(i=it, t=vec.truncstart.CD[it], t.max=vec.Term[it], Receipt.v=mat.Receipt.Use[,it])
+      receipt.temp <- innerJob2(i=it, t=vec.truncstart[it], t.max=vec.Term[it], Receipt.v=mat.Receipt.Use[,it])
     }  
   
   if (createOwnPar==T) {
@@ -574,31 +572,14 @@ truncationJob <- function(mat.Receipt.Use, vec.truncstart.CD, vec.Term, createOw
 # 2) assessing generated portfolio using loss procedure
 outerJob <- function(states, p.trans, seed.value, n, vec.Instal, period, sc.Thres,
                      vec.IntRates, vec.Principal, vec.Term, vec.DoD.lambda, num.thresholds, vec.k.CD,
-                     outer.iter, outer.iter.max, i_p.alt, Arrears.LossRate, Outstanding.LossRate, kg1.trunc=0) {
+                     i_p.alt, Arrears.LossRate, Outstanding.LossRate, k.trunc=0, g.trunc=1) {
   
   ptm <- proc.time() #IGNORE: for computation time calculation
   
   # outer.iter <- 9; seed.value <- 1
   
   # ===================  Initialization
-  # We need to iterate across various transition probabilities. In total, we iterate [outer.iter.max] times 
-  # Assume that we iterate P.it times for the 'performing' state across various staying-moving probabilites for that state, whilst
-  # keeping state D's transition rates constant. Then we change D's transition rates, and repeat the previous P.it times acros state P.
-  # Essentially, we "unpack" the counters from a nested loop, and assign probabilities base upon these counters
-  it.inner.max <- as.integer(sqrt(outer.iter.max))
-  # counter for state P ("inner loop")
-  P.count <- outer.iter - it.inner.max*floor((outer.iter-1)/it.inner.max)
-  # counter for state D ("outer loop")
-  D.count <- floor((outer.iter-1)/it.inner.max) + 1
-  # now assign probabilities accordingly
-  p.PP <- seq(0, 1-p.trans[1,3], length.out = it.inner.max)[P.count]
-  p.DD <- seq(0, 1-p.trans[2,3], length.out = it.inner.max)[D.count]
-  
-  p.trans[1, 1] <- p.PP
-  p.trans[1, 2] <- 1-p.trans[1,3]-p.PP
-  p.trans[2, 1] <- 1-p.trans[2,3]-p.DD
-  p.trans[2, 2] <- p.DD
-  
+
   # error check
   if (any( abs( rowSums(p.trans)-1L) > 0.0001 )) {
     cat(paste0("\n\n0) Transition matrix flawed: ", outer.iter, ". ", c(p.trans)), file="procedure_log.txt", append=TRUE)
@@ -607,7 +588,7 @@ outerJob <- function(states, p.trans, seed.value, n, vec.Instal, period, sc.Thre
   
   # ===================  Generate loan portfolio
   
-  cat(paste0("\n\n1)[",outer.iter," of ",outer.iter.max,"] simulations (", Sys.time(),"). Generating portfolio .. "),
+  cat(paste0("\n\n1) (", Sys.time(),"). Generating portfolio .. "),
       file="procedure_log.txt", append=TRUE)
   
   # --- Markovian Defaults
@@ -623,34 +604,54 @@ outerJob <- function(states, p.trans, seed.value, n, vec.Instal, period, sc.Thre
   mat.DoD.Use <- calc.results$DoD
   rm(calc.results) #an optimization, reduces memory usage  
   
-  # ---- Apply (k,g)-truncation if specified (assuming only g1-measure)
-  if (kg1.trunc > 0) {
+  
+  # ---- Apply (k,g)-truncation if specified ()
+  if (k.trunc > 0) {
     
-    cat(paste0("\n\n1b)[",outer.iter," of ",outer.iter.max,"] simulations (", Sys.time(),"). Truncating portfolio (k=", kg1.trunc, ") .. "),
+    cat(paste0("\n\n1b) (", Sys.time(),"). Truncating portfolio (k=", k.trunc, ", g=", g.trunc,") .. "),
         file="procedure_log.txt", append=TRUE)    
-    # - get start times of truncation (using existing machinery in default.start.first.v2() ), given threshold kg1.trunc, otherwise return -1.
-    vec.truncstart.CD <- sapply(1:n, default.start.first.v2, thres.d=kg1.trunc, del.mat=mat.CD.Use, t=vec.Term)
+    if (g.trunc == 1) {
+      mat.del.use <- mat.CD.Use
+    } else if (g.trunc == 2){
+      mat.del.use <- mat.MD.Use
+    } else if (g.trunc == 3) {
+      mat.del.use <- mat.DoD.Use
+    } else { # default to CD g1-measure
+      mat.del.use <- mat.CD.Use
+    }
+    # - get start times of truncation (using existing machinery in default.start.first.v2() ), given threshold k.trunc, otherwise return -1.
+    vec.truncstart <- sapply(1:n, default.start.first.v2, thres.d=k.trunc, del.mat=mat.del.use, t=vec.Term)
     
     # - call truncation job and replace receipts
-    mat.Receipt.Use <- truncationJob(mat.Receipt.Use, vec.truncstart.CD, vec.Term)
+    mat.Receipt.Use <- truncationJob(mat.Receipt.Use, vec.truncstart, vec.Term)
     
-    # - recalculate delinquency accordingly
+    # - Recalculate delinquency accordingly
     mat.CD.Use <- calculate.CD(vec.Instal, mat.Receipt.Use, sc.Thres, period, n, method="base")
+    
+    # - Recalculate MD/DoD (g2/g3: Macaulay Duration Index (MD) Measure | Degree of Delinquency (DoD) Measure)
+    calc.results <- calculate.MDoD(vec.Instal, mat.Receipt.Use, vec.Principal, period, n, vec.IntRates, vec.DoD.lambda)
+    mat.MD.Use <- calc.results$MD
+    mat.DoD.Use <- calc.results$DoD
+    rm(calc.results) #an optimization, reduces memory usage      
   }
   
   # ==== Select default threshold vectors (d) for g2 and g3 measures, based on measured delinquency
   # -- MD
   max.thres <- max(quantile(mat.MD.Use[!is.na(mat.MD.Use)], 0.95)) + 1
-  vec.k.MD <- seq(1, ifelse(is.na(max.thres), 5, min(max(max.thres, 5), 45) ),length.out = num.thresholds)
+  vec.k.MD <- seq(1, ifelse(is.na(max.thres), 5, max(max.thres, 5)),length.out = num.thresholds)
+  cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+  vec.k.MD <- c(seq(1, cut.1, length.out = len.1),seq(cut.1+0.1, cut.2, length.out = num.thresholds-len.1)) # thresholds found by trial-and-error
   
   # -- DoD
   max.thres <- max(quantile(mat.DoD.Use[!is.na(mat.DoD.Use)], 0.95)) + 1
-  vec.k.DoD <- seq(1, ifelse(is.na(max.thres), 5, min(max(max.thres, 5), 45) ),length.out = num.thresholds) 
+  vec.k.DoD <- seq(1, ifelse(is.na(max.thres), 5, max(max.thres, 5)),length.out = num.thresholds) 
+  cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+  vec.k.DoD <-  c(seq(1, cut.1, length.out = len.1),seq(cut.1+0.1, cut.2, length.out = num.thresholds-len.1)) # thresholds found by trial-and-error
   
   
   # ===================  Portfolio loss assessment across thresholds: parallelized loop
   
-  cat(paste0("\n2)[",outer.iter," of ",outer.iter.max,"] simulations (", Sys.time(),"): Portfolio generated and delinquency assessed. Assessing portfolio losses across thresholds .. "),
+  cat(paste0("\n2) (", Sys.time(),"): Portfolio generated and delinquency assessed. Assessing portfolio losses across thresholds .. "),
       file="procedure_log.txt", append=TRUE)
   
   cat(paste("New Job (", Sys.time(),"): Assessing delinquency and profitability of given portfolio across various thresholds",sep=''),
@@ -673,7 +674,7 @@ outerJob <- function(states, p.trans, seed.value, n, vec.Instal, period, sc.Thre
   
   elapsed <- proc.time() - ptm
   
-  cat(paste0("\n3)[",outer.iter," of ",outer.iter.max,"] simulations (", Sys.time(),"): Done! Elapsed time: ", round(elapsed['elapsed'],digits=0), " seconds"),
+  cat(paste0("\n3) (", Sys.time(),"): Done! Elapsed time: ", round(elapsed['elapsed'],digits=0), " seconds"),
       file="procedure_log.txt", append=TRUE)
   
   # - last data preparation
@@ -695,40 +696,108 @@ outerJob <- function(states, p.trans, seed.value, n, vec.Instal, period, sc.Thre
 # ====== 4. SIMULATION FRAMEWORK
 
 # ---- Parametrisation History
-# 1a: 49 iterations, with 0.1% and 1% write-off state-dependent probabilities
-# 1a(i): 16 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes
-# 1a(ii): 16 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes; applied (12,g1)-truncation
-# 1a(iii): 16 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes (including d=3 variants)
-# 1a(iv): 16 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes (including d=3 variants); including g2 and g3 measures
-# 1b: 81 iterations, with 0.1% and 1% write-off state-dependent probabilities
-# 1c: 144 iterations, with 0.1% and 1% write-off state-dependent probabilities
-# 1d: 256 iterations, with 0.1% and 1% write-off state-dependent probabilities
-# 1d(i): 256 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes
-# 1d(ii): 256 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes; applied (12,g1)-truncation
-# 1d(iii): 256 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes (including d=3 variants)
-# 1d(iv): 256 iterations, with 0.1% and 1% write-off state-dependent probabilities; new statistical information on default episodes (including d=3 variants); including g2 and g3 measures
+# 1a(i): P_PP=0.33, P_DD=0.33, with 0.1% and 1% write-off state-dependent probabilities; no truncation
+# 1a(ii): P_PP=0.33, P_DD=0.33, with 0.1% and 1% write-off state-dependent probabilities; (15,g3)-truncation; cut.1 <- 15; len.1 <- 25; cut.2 <- 40
+# 1a(iii): P_PP=0.33, P_DD=0.9, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 15; len.1 <- 25; cut.2 <- 40
+# 1a(iv): P_PP=0.10, P_DD=0.90, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 7; len.1 <- 20; cut.2 <- 40
+# 1a(v): P_PP=0.10, P_DD=0.10, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 7; len.1 <- 20; cut.2 <- 40
+# 1a(vi): P_PP=0.95, P_DD=0.95, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 4; len.1 <- 15; cut.2 <- 40
+# 1a(vii): P_PP=0.9, P_DD=0.1, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 15; cut.2 <- 40
+# 1a(viii): P_PP=0.75, P_DD=0.75, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 15; cut.2 <- 40
+# 1a(ix): P_PP=0.85, P_DD=0.8, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 15; len.1 <- 20; cut.2 <- 40
+# 1a(x): P_PP=0.20, P_DD=0.05, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+# 1a(xi): P_PP=0.20, P_DD=0.50, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+# 1a(xii): P_PP=0.10, P_DD=0.05, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+# 1a(xiii): P_PP=0.10, P_DD=0.50, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+# 1a(xiv): P_PP=0.90, P_DD=0.05, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 25; cut.2 <- 40
+# 1a(xv): P_PP=0.90, P_DD=0.95, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 5; len.1 <- 20; cut.2 <- 40
+# 1a(xvi): P_PP=0.95, P_DD=0.98, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 5; len.1 <- 20; cut.2 <- 40\
+# 1a(xvii): P_PP=0.40, P_DD=0.025, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 20; cut.2 <- 40
+# 1a(xviii): P_PP=0.40, P_DD=0.575, with 0.1% and 1% write-off state-dependent probabilities; no truncation; cut.1 <- 10; len.1 <- 25; cut.2 <- 40
 
-# variant used in submission: 1d(i) (or 1d(iv))
 
 # ---- Parametrisation
-outer.iter.max <- 256 # needs to be square number by design
 cpu.threads <- 6
 
 # -- Markov chain's state space
 states <- c("P","D", "W") #Performing, Delinquency, Write-off / truncate
 # create a preliminary transition matrix, detailing the write-off state's transition probability at each state
-# and enforcing the write-off state to be absorbing. The remaining transition probabilities will be filled
-# according to some scheme within the main loop itself
+# and enforcing the write-off state to be absorbing.
 p.trans <- matrix(c(rep(0,length(states)-1), 0.001, # base probability for write-off given performing state
                     rep(0,length(states)-1), 0.010, # base probability for write-off given delinquency state
                     rep(0,length(states)-1), 1.000), ncol=3, byrow=T)
 colnames(p.trans) <- states; rownames(p.trans) <- states
 
+# now assign specific probabilities between [0, 1-p.trans[1,3]] and [0, 1-p.trans[2,3]]
+p.PP <- 0.4
+p.DD <- 0.95
+
+# 1.  PP=67%, DD=67%; gives weird cup-like shape in g1
+# 2.  PP=90%, DD=67%; gives somewhat cup-like shape in g1, but flat lines in g2/g3
+# 3.  PP=67%, DD=90%; gives similar shapes as a(iii) [PP=33%, DD=9%]
+# 4.  PP=90%, DD=90%; gives promising optima at early thresholds across all measures, but g1 is too squiggly
+# 5.  SAVED | PP=95%; DD=95%, gives optima with less squiggly g1 curve than 4.
+# 6.  PP=90%, DD=33%; gives similar curve shape as a(vii) [PP=90%, DD=10%], but g2/g3 is flatter with no significant optima
+# 7.  PP=95%, DD=33%; gives similar curve shape as a(vii) [PP=90%, DD=10%], but g2/g3 is flatter with no significant optima, and g1 is flatter also (tending to L-shape)
+# 8.  PP=50%, DD=33%; big optima in g1, smooth L-shapes in g2/g3
+# 9.  PP=33%, DD=50%; bigger optima (cup-shape) in g1, smooth L-shapes in g2/g3 with slight optima, some maxima at early thresholds
+# 10. PP=33%, DD=90%; no optima, monotonic increasing curves
+# 11. PP=33%, DD=67%; no optima, but wonkier nonlinear g1-curve than in 10. g2/g3 curves similar as in 10.
+# 12. PP=67%, DD=33%; slight optima in g1, L-shapes for g2/g3, similar to 8. 
+# 13. PP=75%, DD=50%; significant optima in g1, still L-shapes for g2/g3, similar to 8, 12
+# 14. SAVED | PP=75%, DD=75%; optima across all measures, very interesting nonlinear shape in g1
+# 15. PP=85%, DD=40% 45% 50% 55% 60% 65% 70% 75%; [40,70]: L-shapes in g2/g3 remains fairly unchanged. optima-threshold for g1 moves rightward.
+#     DD=75%: while L-shapes remain, the optima curve in g1 becomes wonkier
+#     DD=80%: L-shapes collapse into slight optima for g2/g3, g1's optima wonky. interesting case.
+#     DD=[85,95]: increasingly similar to 5, less interesting.
+# 16. SAVED | PP=85%, DD=80%; optima across all measures (more so for g1), though g1 has some wonkiness. originally found in 15.
+# 17. PP=20%, DD= 5% 10%; 5% has nice optima across all measures, 10% less so
+#     DD=15% 20% 25% 30% 35% 40% [15,40]: g2/g3 becomes L-shaped, optima in g1 moves rightwards and becomes increasingly "optimized"
+#     DD=45% 50% [45, 50%]: g2/g3 becomes less L-shaped and starts exhibiting optima again, g1's optima deepens and continues to move rightwards
+#     DD=55%: still optima across all measures, but funky shapes in g2/g3.
+#     DD=60% 65% 70% 75% 80% 85% 90% 95% [60, 95]: optima only at d=0, curvy shapes for g2/g3, nonlinear wonky shape in g1, though gets straighter for larger DD
+# 18. SAVED | PP=20%, DD=05%; found from 17; optima across all measures
+# 19. SAVED | PP=20%, DD=50%; found from 17; optima across all measures, deep optima for g1
+# 20. PP=10%, DD= 5% 10% 15% 20% 25% 30% 35%; optima across all measures, deepest in g1; g2/g3 becomes L-shaped from DD=10% onward; optima in g1 moves rightwards as DD increases
+#     DD=40% 45% 50%: L-shapes in g2/g3 starts collapsing back into optima, good shapes after DD=50%
+#     DD=55%: funky shapes in g2/g3, deep optima still in g1
+#     DD=60% 65% 70% 75% 80% 85% 90%: optima only at d=0, nonlinear curve in g1, though it straightens out after 65%
+# 21. SAVED | PP=10%, DD=05%; found from 17; optima across all measures, similar to 18.
+# 22. SAVED | PP=10%, DD=50%; found from 17; optima across all measures; deep optima in g1, similar to 19.
+# 23. SAVED | PP=90%, DD=05%; optima across all measures, though all measures somewhat L-shaped. optima only sleight.
+# 24. PP=90%, DD=15% 20% 25% 30% 35%; slight optima across all measures, though very similar shape to 23 (xiv), g1's optima moves rightward
+#     D=40% 45% 50% 55% 60% 65% 70% 75% 80%; the slight optima in g2/g3 collapses into L-shapes, optima in g1 continues to move rightward as DD increases
+#     D=85%: optima in g1 becomes wonky, the L-shapes of g2/3 become funky, though still largely L-shaped
+#     D=90%: previously produced in 4, gives optima, but g1 is squiggly
+# 25. SAVED | PP=90%, DD=95%; optima found at early threshold across all measures, checkmark-shape.
+# 26. PP=95%, DD=2.5% 5% 10% 15% 20% 25% 30; slight optima across all measures, but still largely L-shaped
+#     DD=35% 40% 50% 55% 60% 65% 70% 75% 80%: optima in g2/g3 collapses into L-shapes, optima in g1 moves rightward, and deeper from D=55% onwards
+#     DD=85%: optima in g1 becomes wonkier and jagged
+#     DD=90%: g1, while still technically having optima, is very wonky and jagged. g2/g3 have optima at early threshold, though flatlines thereafter
+#     DD=95%: previously produced in 8 (vi), gives optima at early threshold, but g1 squiggly
+# 27. SAVED | PP=95%, DD=98%; optima at early thresholds across all measures, similar to 25. (xv), checkmark-shaped. found from 26.
+# 28. PP=40%, DD=2.5%; nice optima across all thresholds, though slightly flattens from 5%, while g1's optima moving to the right as DD increases
+#     DD=15% 20% 25% 30% 35% 40% 45%; optima of g2/g3 collapses into L-shapes, while g1's otpima moves ever rightward and deeper
+#     DD=50% 55% 57.5%; g2/g3 rematerialize optima and deepends from DD=55%, g1's optima quite deep and continues to shift rightwards
+#     DD=60%; weird wiggly optima across all measures (g2/g3 at d=1, while g1 has a very deep minimum)
+#     DD=65% 70% 75% 80% 85% 90% 95% 98%; optima at early thresholds across all measures, g1 nonliner, though continues to straighten as DD increases
+
+# 29. SAVED | PP=40%, DD=02.5%; deep and proper optima across all measures, though resembling a light L-shape; uncovered from 28
+# 30. SAVED | PP=40%, DD=57.5%; deep and proper optima across all measures, threshold-locations very different across measures; uncovered from 28
+
+# calculate the remaining elements
+p.trans[1, 1] <- p.PP
+p.trans[1, 2] <- 1-p.trans[1,3]-p.PP
+p.trans[2, 1] <- 1-p.trans[2,3]-p.DD
+p.trans[2, 2] <- p.DD
+p.trans
+
 # -- Truncation settings
-kg1.trunc <- 0
+k.trunc <- 0
+g.trunc <- 3
 
 # -- File name settings for storing results
-it.name <- "v1_1d(iv)"
+it.name <- "v1_1a(xix)"
 
 # ---- Main Loop
 
@@ -737,32 +806,51 @@ ptm <- proc.time() #IGNORE: for computation time calculation
 cl.port <- makeCluster(cpu.threads) # number of threads to register in the OS for this procedure (used in outerJob)
 registerDoParallel(cl.port)
 
-cat(paste("New Job (", Sys.time(),"): ", outer.iter.max, " simulations. Experiment series ", it.name, ".",sep=''),
+cat(paste("New Job (", Sys.time(),"): Experiment series ", it.name, ".",sep=''),
     file="procedure_log.txt", append=FALSE)
 
 
 
-# Note: need to import all custom functions used within the loss assessment.
-dat.EL <- foreach(outer.iter=1:outer.iter.max, .combine='rbind', .verbose=F, .inorder=F, .packages=c('data.table','foreach'),
-                     .export=c('default.start.first.v2', 'analyze.default.episodes','coreJob_CD', 'simJob_MarkovDefaults_p','outerJob', 'truncationJob')) %do%
-  {
-    dat.EL.outercore <- outerJob(states=states, p.trans=p.trans, seed.value=1, n=n, vec.Instal=vec.Instal, period=period,
-                                 sc.Thres=sc.Thres, vec.IntRates=vec.IntRates, vec.Principal=vec.Principal, vec.Term=vec.Term,
-                                 vec.DoD.lambda=vec.DoD.lambda, num.thresholds=num.thresholds, vec.k.CD=vec.k.CD, outer.iter=outer.iter, outer.iter.max=outer.iter.max,
-                                 i_p.alt=i_p.alt, Arrears.LossRate=Arrears.LossRate, Outstanding.LossRate=Outstanding.LossRate, kg1.trunc=kg1.trunc
-                                )
-  }
+# - main call
+dat.EL <- outerJob(states=states, p.trans=p.trans, seed.value=1, n=n, vec.Instal=vec.Instal, period=period,
+                   sc.Thres=sc.Thres, vec.IntRates=vec.IntRates, vec.Principal=vec.Principal, vec.Term=vec.Term,
+                   vec.DoD.lambda=vec.DoD.lambda, num.thresholds=num.thresholds, vec.k.CD=vec.k.CD,
+                   i_p.alt=i_p.alt, Arrears.LossRate=Arrears.LossRate, Outstanding.LossRate=Outstanding.LossRate, 
+                   k.trunc=k.trunc, g.trunc=g.trunc
+)
 
 # - last data preparation
 setDT(dat.EL, key=c("Iteration", "Measure", "Threshold"))
 # - zip and save optimisation results to disk
-pack.ffdf(paste0("LossProc", outer.iter.max, "-",it.name),dat.EL)
+pack.ffdf(paste0("SpecLossProc-",it.name),dat.EL)
 
 elapsed <- proc.time() - ptm
 elapsed
 
 stopCluster(cl.port) # release threads back to the OS
 
-cat(paste0("\n\nEnd of Job (", Sys.time(),"): ", outer.iter.max, " simulations done. Elapsed time: ", round(elapsed['elapsed'],digits=0), " seconds"),
+cat(paste0("\n\nEnd of Job (", Sys.time(),"): done. Elapsed time: ", round(elapsed['elapsed'],digits=0), " seconds"),
     file="procedure_log.txt", append=TRUE)
+
+
+
+
+# =========== Loss Plots
+# Note these loss plots are only experimental. There is a much more manicured version that produces the graphs actually used in the research article.
+
+# -- structure final results for plotting purposes
+plot.data <- copy(dat.EL)
+plot.data[, Loss := Loss/ sum(vec.Principal)] # convert into loss %
+
+# -- plot
+ggplot(plot.data, aes(x=Threshold, y=Loss)) + 
+  geom_point(aes(x=Threshold,y=Loss, color=Measure, shape=Measure), size=1.75) +
+  geom_line(aes(x=Threshold, y=Loss, color=Measure), size = 0.5) + 
+  labs(y="Loss (%)",x=bquote(Default~thresholds~italic(d))) + theme_minimal() + 
+  theme(text=element_text(family="Times New Roman", size=12),
+        legend.position="bottom") + 
+  scale_color_economist(name="Delinquency Measure",guide = guide_legend(nrow=1)) +
+  scale_shape_manual(values=c(1,16,8), 
+                     name="Delinquency Measure",guide = guide_legend(nrow=1)) +
+  scale_y_continuous(breaks= pretty_breaks(), labels=percent)
 
