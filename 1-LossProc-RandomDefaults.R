@@ -15,6 +15,7 @@ script.opt <- 'b' # valid values may include either 'a' (fig. 3a) or 'b' (fig. 3
 
 # -- R package setup
 require(data.table)
+require(tidyr)
 require(ggplot2)
 require(ggthemes)
 require(scales)
@@ -395,14 +396,20 @@ for (d in 1:num.thresholds) {
   dat.EL.interim <- rbind(data.table(Measure="CD",Threshold=d.CD,
                                      Vol_Perf=length(perf.CD), Vol_Def=length(def.CD),
                                      Bal_Perf = sum(vec.bal.CD[perf.CD], na.rm = T), Bal_Def = sum(vec.bal.CD[def.CD], na.rm = T),
+                                     ArrearsLoss = sum(pmax(vec.ArrearsPV.CD*Arrears.LossRate,0)),
+                                     ExpBalLoss = sum(pmax(vec.ExpBalance.CD*Outstanding.LossRate,0)),
                                      Loss = vec.TotLoss.CD[d]),
                           data.table(Measure="MD",Threshold=d.MD,
                                      Vol_Perf=length(perf.MD), Vol_Def=length(def.MD),
                                      Bal_Perf = sum(vec.bal.MD[perf.MD], na.rm = T), Bal_Def = sum(vec.bal.MD[def.MD], na.rm = T),
+                                     ArrearsLoss = sum(pmax(vec.ArrearsPV.MD*Arrears.LossRate,0)),
+                                     ExpBalLoss = sum(pmax(vec.ExpBalance.MD*Outstanding.LossRate,0)),
                                      Loss = vec.TotLoss.MD[d]),
                           data.table(Measure="DoD",Threshold=d.DoD,
                                      Vol_Perf=length(perf.DoD), Vol_Def=length(def.DoD),
                                      Bal_Perf = sum(vec.bal.DoD[perf.DoD], na.rm = T), Bal_Def = sum(vec.bal.DoD[def.DoD], na.rm = T),
+                                     ArrearsLoss = sum(pmax(vec.ArrearsPV.DoD*Arrears.LossRate,0)),
+                                     ExpBalLoss = sum(pmax(vec.ExpBalance.DoD*Outstanding.LossRate,0)),
                                      Loss = vec.TotLoss.DoD[d])
   ) 
   
@@ -418,6 +425,8 @@ for (d in 1:num.thresholds) {
 # - last data preparation
 setDT(dat.EL, key=c("Measure","Threshold"))
 dat.EL[, Loss := Loss/ sum(vec.Principal)] # convert into loss %
+
+# - save results
 write.csv(x=dat.EL, file=paste0(given.filename,'.csv'),row.names=F)
 save.image(file = paste0(given.filename, '.RData'))
 
@@ -426,6 +435,8 @@ save.image(file = paste0(given.filename, '.RData'))
 
 # =========== Loss Plots
 # Note these loss plots are only experimental. There is a much more manicured version that produces the graphs actually used in the research article.
+
+# ---- Portfolio Loss
 
 # -- structure final results for plotting purposes
 plot.data <- rbind( data.table(Measure="g1: CD", Threshold=vec.d.CD, Loss=vec.TotLoss.CD),
@@ -455,3 +466,27 @@ minima <- function() {
 minima()
 
 proc.time() - ptm #IGNORE: computation time taken
+
+
+
+
+# ---- Loss components (CD-only)
+plot.data <- subset(dat.EL, Measure == "CD", select = c("Threshold", "ArrearsLoss", "ExpBalLoss" ) ) %>% 
+  pivot_longer(cols=c("ArrearsLoss", "ExpBalLoss"), names_to="LossType", values_to="LossValue") %>% as.data.table(key="Threshold")
+plot.data[, LossValue := LossValue / sum(vec.Principal)]
+labels.v <- c("ArrearsLoss"="Lost Arrears", "ExpBalLoss" = "Lost Expected Balance (Opportunity Cost)")
+
+# -- plot
+g <- ggplot(plot.data, aes(x=Threshold, y=LossValue)) + theme_bw() +
+  geom_point(aes(colour=LossType, shape=LossType), size=1.75) + 
+  geom_line(aes(colour=LossType), size=0.5) + 
+  labs(y="Loss (%)",x=bquote(Default~thresholds~italic(d))) +
+  theme(text=element_text(family="Times New Roman", size=12),
+        legend.position="bottom") + 
+  scale_color_economist(name="Loss Component", labels=labels.v) + 
+  scale_shape_discrete(name="Loss Component", labels=labels.v) + 
+  scale_y_continuous(breaks= pretty_breaks(), labels=percent)
+
+dpi <- 170
+ggsave(plot=g, filename="LossComponentsByPolicy.png", width=1200/dpi, height=1000/dpi,dpi=dpi)
+  
